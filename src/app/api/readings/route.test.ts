@@ -1,39 +1,12 @@
-import { NextRequest } from "next/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { encode } from "@auth/core/jwt";
 import type { Kysely } from "kysely";
 import type { Database } from "@/db/types";
+import { startTestDatabase, stopTestDatabase, type TestDatabase } from "@/test/testDatabase";
+import { requestFor, sessionCookie } from "@/test/session";
 
-const SESSION_SECRET = "vitest-only-secret-do-not-use-elsewhere";
-
-let container: StartedPostgreSqlContainer;
+let testDb: TestDatabase;
 let db: Kysely<Database>;
 let GET: typeof import("./route").GET;
-
-async function sessionCookie(userId: string, email: string) {
-  const token = await encode({
-    secret: SESSION_SECRET,
-    salt: "authjs.session-token",
-    token: { sub: userId, userId, email },
-  });
-  return `authjs.session-token=${token}`;
-}
-
-function requestFor(path: string, cookie?: string) {
-  // Auth.js's `auth()` route wrapper builds its internal session-check URL from
-  // x-forwarded-proto/host, which Next.js's server injects on every real request.
-  // A NextRequest built by hand needs these set explicitly or auth() silently
-  // treats the request as unauthenticated.
-  const headers: Record<string, string> = {
-    "x-forwarded-proto": "http",
-    "x-forwarded-host": "localhost:3000",
-    host: "localhost:3000",
-  };
-  if (cookie) headers.cookie = cookie;
-
-  return new NextRequest(new URL(path, "http://localhost:3000"), { headers });
-}
 
 async function callGet(path: string, cookie?: string): Promise<Response> {
   const response = await GET(requestFor(path, cookie), { params: Promise.resolve({}) });
@@ -42,24 +15,14 @@ async function callGet(path: string, cookie?: string): Promise<Response> {
 }
 
 beforeAll(async () => {
-  container = await new PostgreSqlContainer("postgres:17-alpine").start();
-
-  process.env.DATABASE_URL = container.getConnectionUri();
-  process.env.AUTH_SECRET = SESSION_SECRET;
-  process.env.AUTH_GOOGLE_ID = "test-google-id";
-  process.env.AUTH_GOOGLE_SECRET = "test-google-secret";
-
-  ({ db } = await import("@/db/database"));
-  const { createMigrator } = await import("@/db/migrator");
-  const { error } = await createMigrator(db).migrateToLatest();
-  if (error) throw error;
+  testDb = await startTestDatabase();
+  db = testDb.db;
 
   ({ GET } = await import("./route"));
 }, 60_000);
 
 afterAll(async () => {
-  await db.destroy();
-  await container.stop();
+  await stopTestDatabase(testDb);
 });
 
 beforeEach(async () => {
