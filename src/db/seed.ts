@@ -2,18 +2,11 @@ import * as path from "path";
 import { fileURLToPath } from "url";
 import { readFileSync } from "fs";
 import { db } from "./database";
+import { parseCsv } from "./csv";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CSV_PATH = path.join(__dirname, "seed-data", "sample_data_2025-04-10.csv");
 const DEMO_USER_EMAIL = "demo@watameta.dev";
-
-function parseCsv(raw: string): { recordedAt: string; value: number }[] {
-  const [, ...rows] = raw.trim().split("\n");
-  return rows.map((line) => {
-    const [time, value] = line.split(",");
-    return { recordedAt: `${time}:00Z`, value: Number(value) };
-  });
-}
 
 async function seed() {
   const existingUser = await db

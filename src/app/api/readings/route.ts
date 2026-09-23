@@ -1,26 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { sql } from "kysely";
 import { auth } from "@/auth";
 import { db } from "@/db/database";
+import { PAGE_SIZE, parseDateParam, parsePageParam } from "./params";
 
-const PAGE_SIZE = 24 * 7;
-
-function parseDateParam(value: string | null): Date | undefined | null {
-  if (!value) return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function parsePageParam(value: string | null): number | null {
-  if (!value) return 1;
-  if (!/^\d+$/.test(value)) return null;
-  const page = Number(value);
-  return page < 1 ? null : page;
-}
-
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+export const GET = auth(async (request) => {
+  if (!request.auth?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -39,7 +24,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid 'page' number" }, { status: 400 });
   }
 
-  let baseQuery = db.selectFrom("readings").where("user_id", "=", session.user.id);
+  let baseQuery = db.selectFrom("readings").where("user_id", "=", request.auth.user.id);
 
   if (from) baseQuery = baseQuery.where("recorded_at", ">=", from);
   if (to) baseQuery = baseQuery.where("recorded_at", "<=", to);
@@ -63,4 +48,4 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(Number(total) / PAGE_SIZE),
     },
   });
-}
+});

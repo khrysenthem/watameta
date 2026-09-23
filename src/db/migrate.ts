@@ -1,19 +1,7 @@
-import * as path from "path";
-import { fileURLToPath } from "url";
-import { promises as fs } from "fs";
-import { FileMigrationProvider, Migrator } from "kysely/migration";
 import { db } from "./database";
+import { createMigrator } from "./migrator";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const migrator = new Migrator({
-  db,
-  provider: new FileMigrationProvider({
-    fs,
-    path,
-    migrationFolder: path.join(__dirname, "migrations"),
-  }),
-});
+const migrator = createMigrator(db);
 
 async function migrate() {
   const direction = process.argv[2] ?? "latest";
