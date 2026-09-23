@@ -1,0 +1,34 @@
+{
+  "name": "watameta",
+  "version": "1.0.0",
+  "description": "Watameta is my attempt at Asteroid technical test, let's have fun!",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "tsx src/db/migrate.ts",
+    "migrate:down": "tsx src/db/migrate.ts down"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khrysenthem/watameta.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/khrysenthem/watameta/issues"
+  },
+  "homepage": "https://github.com/khrysenthem/watameta#readme",
+  "dependencies": {
+    "dotenv": "^18.0.3",
+    "kysely": "^0.29.6",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
