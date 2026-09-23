@@ -1,7 +1,7 @@
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { readFileSync } from "fs";
-import { db } from "./database.js";
+import { db } from "./database";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CSV_PATH = path.join(__dirname, "seed-data", "sample_data_2025-04-10.csv");
