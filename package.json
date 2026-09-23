@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "migrate": "tsx src/db/migrate.ts",
-    "migrate:down": "tsx src/db/migrate.ts down"
+    "migrate:down": "tsx src/db/migrate.ts down",
+    "seed": "tsx src/db/seed.ts"
   },
   "repository": {
     "type": "git",
