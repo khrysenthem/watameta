@@ -1,0 +1,24 @@
+{
+  "name": "watameta-cloud-aws",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AWS CDK app that deploys the Watameta API to development and production environments",
+  "type": "module",
+  "scripts": {
+    "synth": "cdk synth",
+    "diff": "cdk diff",
+    "deploy": "cdk deploy",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "aws-cdk": "^2.1143.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.270.0",
+    "constructs": "^10.8.1"
+  }
+}

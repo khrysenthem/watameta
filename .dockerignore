@@ -4,6 +4,12 @@ node_modules
 dist
 *.tsbuildinfo
 
+# CDK app: not needed to build the API image, and its own cdk.out/node_modules
+# living under here would otherwise get recursively copied into themselves
+# when `cloud/aws`'s own `cdk synth` stages this whole repo as the Docker
+# build context for ecs.ContainerImage.fromAsset(repoRoot).
+cloud
+
 # Secrets: never let these into the build context — Next's standalone
 # output copies any .env file it finds at build time into the image.
 .env

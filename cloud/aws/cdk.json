@@ -1,0 +1,15 @@
+{
+  "app": "npx tsx bin/watameta.ts",
+  "watch": {
+    "include": ["**"],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "**/*.d.ts",
+      "**/*.test.ts",
+      "node_modules",
+      "cdk.out"
+    ]
+  },
+  "context": {}
+}

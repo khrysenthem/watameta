@@ -16,3 +16,7 @@ docker run -p 3000:3000 \
 All four env vars are required at runtime (none are baked into the image).
 Migrations aren't run by the image — apply them separately (`npm run migrate`)
 against the target `DATABASE_URL` before starting the container.
+
+## Cloud deployment
+
+AWS CDK (development + production environments): see [`cloud/aws`](cloud/aws).
