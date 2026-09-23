@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+dist
+*.tsbuildinfo
+
+# Secrets: never let these into the build context — Next's standalone
+# output copies any .env file it finds at build time into the image.
+.env
+.env.*
