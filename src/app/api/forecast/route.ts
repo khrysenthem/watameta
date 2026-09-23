@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db/database";
-import { computeWeeklyForecast } from "./compute";
+import { computeWeeklyForecast } from "@/forecasting/compute";
 
 export const GET = auth(async (request) => {
   if (!request.auth?.user?.id) {
