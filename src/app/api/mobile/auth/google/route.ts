@@ -35,15 +35,24 @@ export async function POST(request: Request) {
   const client = new OAuth2Client({ clientId });
 
   let email: string | undefined;
+  let emailVerified: boolean | undefined;
   try {
     const ticket = await client.verifyIdToken({ idToken, audience: clientId });
-    email = ticket.getPayload()?.email;
+    const payload = ticket.getPayload();
+    email = payload?.email;
+    emailVerified = payload?.email_verified;
   } catch {
     return NextResponse.json({ error: "Invalid Google ID token" }, { status: 401 });
   }
 
   if (!email) {
     return NextResponse.json({ error: "Google account has no email" }, { status: 401 });
+  }
+  // Trusting an unverified email would let a token bind to another user's
+  // existing account by email — same check the web login makes (see
+  // src/auth.ts's signIn callback).
+  if (!emailVerified) {
+    return NextResponse.json({ error: "Google account email is not verified" }, { status: 401 });
   }
 
   const user = await upsertUserByEmail(email);

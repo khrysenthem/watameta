@@ -44,7 +44,9 @@ beforeEach(async () => {
 
 describe("POST /api/mobile/auth/google", () => {
   it("verifies a valid ID token, issues a session token, and upserts the user", async () => {
-    verifyIdTokenMock.mockResolvedValue({ getPayload: () => ({ email: "alice@example.com" }) });
+    verifyIdTokenMock.mockResolvedValue({
+      getPayload: () => ({ email: "alice@example.com", email_verified: true }),
+    });
 
     const response = await POST(postRequest({ idToken: "fake-google-id-token" }));
     const body = await response.json();
@@ -65,7 +67,9 @@ describe("POST /api/mobile/auth/google", () => {
   });
 
   it("reuses the existing user row on a second sign-in", async () => {
-    verifyIdTokenMock.mockResolvedValue({ getPayload: () => ({ email: "alice@example.com" }) });
+    verifyIdTokenMock.mockResolvedValue({
+      getPayload: () => ({ email: "alice@example.com", email_verified: true }),
+    });
 
     const first = await (await POST(postRequest({ idToken: "fake-google-id-token-1" }))).json();
     const second = await (await POST(postRequest({ idToken: "fake-google-id-token-2" }))).json();
@@ -92,6 +96,22 @@ describe("POST /api/mobile/auth/google", () => {
 
     const response = await POST(postRequest({ idToken: "fake-google-id-token" }));
     expect(response.status).toBe(401);
+  });
+
+  it("returns 401 when the Google account's email is not verified", async () => {
+    verifyIdTokenMock.mockResolvedValue({
+      getPayload: () => ({ email: "alice@example.com", email_verified: false }),
+    });
+
+    const response = await POST(postRequest({ idToken: "fake-google-id-token" }));
+    expect(response.status).toBe(401);
+
+    const row = await db
+      .selectFrom("users")
+      .select("id")
+      .where("email", "=", "alice@example.com")
+      .executeTakeFirst();
+    expect(row).toBeUndefined();
   });
 
   it("returns 500 when AUTH_GOOGLE_MOBILE_CLIENT_ID is not configured", async () => {
