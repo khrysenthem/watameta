@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { fetchToday, type TodayResponse } from "@/lib/api-client";
 import { getCachedToday, setCachedToday } from "@/lib/today-cache";
 import { HourlyBarChart } from "@/components/hourly-bar-chart";
+import { useThemeColors } from "@/lib/theme";
 
 interface TodayState {
   data: TodayResponse;
@@ -15,6 +16,7 @@ interface TodayState {
 export function TodayScreen() {
   const { token, user, signOut } = useAuth();
   const insets = useSafeAreaInsets();
+  const c = useThemeColors();
   // Lazy initializer, not an effect: reading the cache is a synchronous,
   // one-time thing this component needs *as* its initial state, not a
   // side effect to synchronize afterwards.
@@ -50,7 +52,7 @@ export function TodayScreen() {
 
   const centerStyle = [
     styles.center,
-    { paddingLeft: insets.left + 16, paddingRight: insets.right + 16 },
+    { backgroundColor: c.surface, paddingLeft: insets.left + 16, paddingRight: insets.right + 16 },
   ];
 
   if (isRefreshing && !today) {
@@ -64,7 +66,7 @@ export function TodayScreen() {
   if (error && !today) {
     return (
       <View style={centerStyle}>
-        <Text style={styles.error}>{error}</Text>
+        <Text style={[styles.error, { color: c.danger }]}>{error}</Text>
         <Button title="Sign out" onPress={signOut} />
       </View>
     );
@@ -72,6 +74,7 @@ export function TodayScreen() {
 
   return (
     <ScrollView
+      style={{ backgroundColor: c.surface }}
       contentContainerStyle={[
         styles.container,
         {
@@ -82,9 +85,9 @@ export function TodayScreen() {
         },
       ]}
     >
-      {user ? <Text style={styles.subtitle}>{user.email}</Text> : null}
+      {user ? <Text style={[styles.subtitle, { color: c.textSecondary }]}>{user.email}</Text> : null}
       {today?.cachedAt ? (
-        <Text style={styles.stale}>
+        <Text style={[styles.stale, { color: c.warning }]}>
           {isRefreshing ? "Refreshing…" : "Showing cached data"} · last updated{" "}
           {new Date(today.cachedAt).toLocaleString()}
         </Text>
@@ -98,7 +101,7 @@ export function TodayScreen() {
 const styles = StyleSheet.create({
   container: { flexGrow: 1, gap: 16 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  subtitle: { fontSize: 14, color: "#888" },
-  stale: { fontSize: 12, color: "#a06b00" },
-  error: { color: "#c0392b" },
+  subtitle: { fontSize: 14 },
+  stale: { fontSize: 12 },
+  error: {},
 });

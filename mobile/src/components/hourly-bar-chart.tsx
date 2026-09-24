@@ -1,37 +1,16 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View, useColorScheme, type LayoutChangeEvent } from "react-native";
+import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
 import type { TodayHour } from "@/lib/api-client";
-
-// Single-series palette (sequential blue) — "actual" and "forecast" are the
-// same metric at different certainty, not two series, so they're the same
-// hue at two lightness steps rather than two colors.
-const PALETTE = {
-  light: {
-    surface: "#fcfcfb",
-    textPrimary: "#0b0b0b",
-    textSecondary: "#52514e",
-    muted: "#898781",
-    axis: "#c3c2b7",
-    series: "#2a78d6",
-    seriesForecast: "#a9c8ec",
-  },
-  dark: {
-    surface: "#1a1a19",
-    textPrimary: "#ffffff",
-    textSecondary: "#c3c2b7",
-    muted: "#898781",
-    axis: "#383835",
-    series: "#3987e5",
-    seriesForecast: "#2c4d73",
-  },
-};
+import { useThemeColors } from "@/lib/theme";
 
 const CHART_HEIGHT = 140;
 const LABEL_HOURS = [0, 4, 8, 12, 16, 20];
 
 export function HourlyBarChart({ hours, date }: { hours: TodayHour[]; date: string }) {
-  const scheme = useColorScheme();
-  const c = scheme === "dark" ? PALETTE.dark : PALETTE.light;
+  // "actual" and "forecast" are the same metric at different certainty, not
+  // two series, so they're the same hue at two lightness steps (c.series /
+  // c.seriesForecast) rather than two colors.
+  const c = useThemeColors();
   const [showTable, setShowTable] = useState(false);
   // The window width isn't the plot's actual width — this card has its own
   // padding, and sits inside a scroll container with its own (safe-area
