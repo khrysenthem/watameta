@@ -20,8 +20,9 @@ Per environment:
 - **RDS** (`lib/database-construct.ts`): Postgres 17, encrypted at rest, in
   the isolated tier. Its security group only accepts inbound 5432 from the
   app tier's security group.
-- **Secrets** (`lib/secrets-construct.ts`): four Secrets Manager entries —
-  `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` — see
+- **Secrets** (`lib/secrets-construct.ts`): five Secrets Manager entries —
+  `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`,
+  `AUTH_GOOGLE_MOBILE_CLIENT_ID` — see
   [Manual steps after deploying](#manual-steps-after-deploying) below.
 - **API** (`lib/api-construct.ts`): an ECS cluster running an
   `ApplicationLoadBalancedFargateService` built from the repo root
@@ -69,9 +70,10 @@ API, only build the Docker image locally and render CloudFormation.
 ## Manual steps after deploying
 
 Secrets Manager can't hold an empty secret, so `DATABASE_URL`,
-`AUTH_GOOGLE_ID`, and `AUTH_GOOGLE_SECRET` are created with a throwaway
-placeholder value. `AUTH_SECRET` is the one exception — it's just a random
-signing key, so it's auto-generated and needs no manual step.
+`AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, and `AUTH_GOOGLE_MOBILE_CLIENT_ID`
+are created with a throwaway placeholder value. `AUTH_SECRET` is the one
+exception — it's just a random signing key, so it's auto-generated and needs
+no manual step.
 
 After the first deploy, for each environment:
 
@@ -84,11 +86,16 @@ After the first deploy, for each environment:
      --secret-id <DatabaseUrl secret ARN> \
      --secret-string "postgres://<user>:<password>@<rds-endpoint>:5432/watameta"
    ```
-2. **`AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`**: create a Google Cloud OAuth
-   client (console.cloud.google.com → APIs & Services → Credentials),
-   authorized redirect URI `http://<ServiceUrl output>/api/auth/callback/google`,
-   then `put-secret-value` each one.
-3. Force a new deployment so the running tasks pick up the new values:
+2. **`AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`**: create a "Web application"
+   Google Cloud OAuth client (console.cloud.google.com → APIs & Services →
+   Credentials), authorized redirect URI
+   `http://<ServiceUrl output>/api/auth/callback/google`, then
+   `put-secret-value` each one.
+3. **`AUTH_GOOGLE_MOBILE_CLIENT_ID`**: create a separate "iOS" Google Cloud
+   OAuth client (see `mobile/README.md`) and `put-secret-value` its client
+   ID — there's no client secret to set for this client type, and no
+   redirect URI to register.
+4. Force a new deployment so the running tasks pick up the new values:
    `aws ecs update-service --cluster <ClusterName> --service <service name> --force-new-deployment`.
 
 ## Running migrations

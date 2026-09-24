@@ -42,6 +42,7 @@ export class ApiConstruct extends Construct {
       AUTH_SECRET: ecs.Secret.fromSecretsManager(secrets.authSecret),
       AUTH_GOOGLE_ID: ecs.Secret.fromSecretsManager(secrets.googleClientId),
       AUTH_GOOGLE_SECRET: ecs.Secret.fromSecretsManager(secrets.googleClientSecret),
+      AUTH_GOOGLE_MOBILE_CLIENT_ID: ecs.Secret.fromSecretsManager(secrets.googleMobileClientId),
     };
 
     const service = new ecsPatterns.ApplicationLoadBalancedFargateService(this, "Service", {
