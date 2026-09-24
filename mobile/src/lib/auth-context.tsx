@@ -4,6 +4,7 @@ import { GOOGLE_CLIENT_ID } from "./config";
 import { reversedClientIdScheme } from "./google-client";
 import { exchangeGoogleIdToken } from "./mobile-auth";
 import { clearStoredToken, getStoredToken, setStoredToken } from "./session-store";
+import { clearCachedToday } from "./today-cache";
 
 interface AuthUser {
   id: string;
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await clearStoredToken();
+    clearCachedToday();
     setState((s) => ({ ...s, token: null, user: null }));
   };
 
