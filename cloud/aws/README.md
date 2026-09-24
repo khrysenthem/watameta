@@ -46,17 +46,25 @@ deletion protection, 2+ tasks across AZs, autoscaling on CPU).
 
 ## Commands
 
+The CDK app only ever defines *one* environment's stack at a time, chosen via
+the `env` context value — so a bare `cdk deploy` can't touch the wrong one.
+`npm install`, then:
+
 ```
-npm install
-npm run synth   # generate CloudFormation templates, no AWS calls
-npm run diff    # compare against what's currently deployed
-npm run deploy  # deploy (add -- --all, or a stack name, as needed)
-npm test        # assertion tests against the synthesized templates
+npm run synth:dev    # or synth:prod — generate CloudFormation, no AWS calls
+npm run diff:dev     # or diff:prod  — compare against what's currently deployed
+npm run deploy:dev   # or deploy:prod
+npm test             # assertion tests against the synthesized templates
 ```
 
-`npm run synth`/`test` work with zero AWS credentials — they never call the
-AWS API, only build the Docker image locally and render CloudFormation.
-`deploy`/`diff` need real credentials.
+These map to `cdk <command> -c env=development|production`; pass that same
+`-c env=...` flag directly if you need a raw `cdk` command not covered above
+(e.g. `npx cdk destroy -c env=development`). `cdk bootstrap` is account/region-level,
+not stack-specific, so it doesn't take `-c env`.
+
+`synth:*`/`test` work with zero AWS credentials — they never call the AWS
+API, only build the Docker image locally and render CloudFormation.
+`deploy:*`/`diff:*` need real credentials.
 
 ## Manual steps after deploying
 

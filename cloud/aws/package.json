@@ -5,9 +5,12 @@
   "description": "AWS CDK app that deploys the Watameta API to development and production environments",
   "type": "module",
   "scripts": {
-    "synth": "cdk synth",
-    "diff": "cdk diff",
-    "deploy": "cdk deploy",
+    "synth:dev": "cdk synth -c env=development",
+    "synth:prod": "cdk synth -c env=production",
+    "diff:dev": "cdk diff -c env=development",
+    "diff:prod": "cdk diff -c env=production",
+    "deploy:dev": "cdk deploy -c env=development",
+    "deploy:prod": "cdk deploy -c env=production",
     "test": "vitest run"
   },
   "devDependencies": {
