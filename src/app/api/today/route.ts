@@ -2,16 +2,27 @@ import { NextResponse } from "next/server";
 import { sql } from "kysely";
 import { auth } from "@/auth";
 import { db } from "@/db/database";
+import { resolveSessionUserId } from "@/resolve-session-user";
 import { computeWeeklyForecast } from "@/forecasting/compute";
 import { computeTodayProfile } from "./compute";
 
 export const GET = auth(async (request) => {
-  if (!request.auth?.user?.id) {
+  const userId = await resolveSessionUserId(request);
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = request.auth.user.id;
-  const now = new Date();
+  // ?now= lets a caller pin "today" to a specific instant — useful for
+  // demoing/testing against fixed seed data, which will otherwise always
+  // look entirely forecasted once enough real time has passed since it was
+  // recorded. Scoped to the caller's own data either way, so this doesn't
+  // expose anything a real request against real-time data wouldn't.
+  const nowOverride = request.nextUrl.searchParams.get("now");
+  const now = nowOverride ? new Date(nowOverride) : new Date();
+  if (Number.isNaN(now.getTime())) {
+    return NextResponse.json({ error: "Invalid 'now' date" }, { status: 400 });
+  }
+
   const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
   const todayDow = todayStart.getUTCDay();

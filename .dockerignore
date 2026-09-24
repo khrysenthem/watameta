@@ -10,6 +10,10 @@ dist
 # build context for ecs.ContainerImage.fromAsset(repoRoot).
 cloud
 
+# React Native app: not needed to build the API image, and its own
+# node_modules would otherwise bloat the build context.
+mobile
+
 # Secrets: never let these into the build context — Next's standalone
 # output copies any .env file it finds at build time into the image.
 .env

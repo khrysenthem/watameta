@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db/database";
+import { resolveSessionUserId } from "@/resolve-session-user";
 import { computeWeeklyForecast } from "@/forecasting/compute";
 
 export const GET = auth(async (request) => {
-  if (!request.auth?.user?.id) {
+  const userId = await resolveSessionUserId(request);
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const readings = await db
     .selectFrom("readings")
     .select(["recorded_at", "value"])
-    .where("user_id", "=", request.auth.user.id)
+    .where("user_id", "=", userId)
     .orderBy("recorded_at", "asc")
     .execute();
 

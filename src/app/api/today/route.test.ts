@@ -1,8 +1,10 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 import type { Kysely } from "kysely";
 import type { Database } from "@/db/types";
 import { startTestDatabase, stopTestDatabase, type TestDatabase } from "@/test/testDatabase";
 import { requestFor, sessionCookie } from "@/test/session";
+import { issueSessionToken } from "@/session-token";
 
 let testDb: TestDatabase;
 let db: Kysely<Database>;
@@ -86,5 +88,58 @@ describe("GET /api/today", () => {
     expect(body.hours[8]).toMatchObject({ value: null, source: null });
 
     expect(body.hours.some((h: { value: number }) => h.value === 999999)).toBe(false);
+  });
+
+  it("also authenticates via an Authorization: Bearer token, as the mobile app uses", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2023-01-16T10:30:00Z"));
+
+    const alice = await createUser("alice@example.com");
+    await db
+      .insertInto("readings")
+      .values([{ user_id: alice.id, recorded_at: "2023-01-16T09:00:00Z", value: 300 }])
+      .execute();
+
+    const token = await issueSessionToken({ userId: alice.id, email: "alice@example.com" });
+    const request = new NextRequest(new URL("/api/today", "http://localhost:3000"), {
+      headers: {
+        "x-forwarded-proto": "http",
+        "x-forwarded-host": "localhost:3000",
+        host: "localhost:3000",
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    const response = await GET(request, { params: Promise.resolve({}) });
+    const body = await response!.json();
+
+    expect(response!.status).toBe(200);
+    expect(body.hours[9]).toMatchObject({ value: 300, source: "actual" });
+  });
+
+  it("honors a ?now= override, without needing the system clock changed", async () => {
+    // Deliberately does NOT fake the system timer here — the override is the
+    // thing under test.
+    const alice = await createUser("alice@example.com");
+    await db
+      .insertInto("readings")
+      .values([{ user_id: alice.id, recorded_at: "2023-01-16T09:00:00Z", value: 300 }])
+      .execute();
+
+    const cookie = await sessionCookie(alice.id, "alice@example.com");
+    const response = await callGet("/api/today?now=2023-01-16T10:30:00Z", cookie);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.date).toBe("2023-01-16");
+    expect(body.hours[9]).toMatchObject({ value: 300, source: "actual" });
+  });
+
+  it("returns 400 for an invalid ?now=", async () => {
+    const alice = await createUser("alice@example.com");
+    const cookie = await sessionCookie(alice.id, "alice@example.com");
+
+    const response = await callGet("/api/today?now=not-a-date", cookie);
+    expect(response.status).toBe(400);
   });
 });

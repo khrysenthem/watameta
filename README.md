@@ -20,3 +20,9 @@ against the target `DATABASE_URL` before starting the container.
 ## Cloud deployment
 
 AWS CDK (development + production environments): see [`cloud/aws`](cloud/aws).
+
+## Mobile app
+
+React Native (Expo) app for iOS/Android: see [`mobile`](mobile). Google
+sign-in needs a Development Build, not plain Expo Go — Expo Go's shared app
+scheme can't receive the OAuth redirect.

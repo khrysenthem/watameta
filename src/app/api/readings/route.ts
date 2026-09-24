@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { sql } from "kysely";
 import { auth } from "@/auth";
 import { db } from "@/db/database";
+import { resolveSessionUserId } from "@/resolve-session-user";
 import { PAGE_SIZE, parseDateParam, parsePageParam } from "./params";
 
 export const GET = auth(async (request) => {
-  if (!request.auth?.user?.id) {
+  const userId = await resolveSessionUserId(request);
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -24,7 +26,7 @@ export const GET = auth(async (request) => {
     return NextResponse.json({ error: "Invalid 'page' number" }, { status: 400 });
   }
 
-  let baseQuery = db.selectFrom("readings").where("user_id", "=", request.auth.user.id);
+  let baseQuery = db.selectFrom("readings").where("user_id", "=", userId);
 
   if (from) baseQuery = baseQuery.where("recorded_at", ">=", from);
   if (to) baseQuery = baseQuery.where("recorded_at", "<=", to);
