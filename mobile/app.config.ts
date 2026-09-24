@@ -22,7 +22,7 @@ const config: ExpoConfig = {
   name: "Watameta",
   slug: "watameta",
   version: "1.0.0",
-  orientation: "portrait",
+  orientation: "default",
   icon: "./assets/images/icon.png",
   scheme,
   userInterfaceStyle: "automatic",

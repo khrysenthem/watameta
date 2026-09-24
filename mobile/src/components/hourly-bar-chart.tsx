@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View, useColorScheme, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, Text, View, useColorScheme, type LayoutChangeEvent } from "react-native";
 import type { TodayHour } from "@/lib/api-client";
 
 // Single-series palette (sequential blue) — "actual" and "forecast" are the
@@ -27,14 +27,20 @@ const PALETTE = {
 };
 
 const CHART_HEIGHT = 140;
-const HORIZONTAL_PADDING = 32;
 const LABEL_HOURS = [0, 4, 8, 12, 16, 20];
 
 export function HourlyBarChart({ hours, date }: { hours: TodayHour[]; date: string }) {
   const scheme = useColorScheme();
   const c = scheme === "dark" ? PALETTE.dark : PALETTE.light;
-  const { width } = useWindowDimensions();
   const [showTable, setShowTable] = useState(false);
+  // The window width isn't the plot's actual width — this card has its own
+  // padding, and sits inside a scroll container with its own (safe-area
+  // dependent, so orientation-dependent) padding too. Measuring the plot
+  // row's own laid-out width — it already stretches to fill its parent's
+  // content box — is what keeps bars from overflowing that box, in any
+  // orientation, without having to track every surrounding padding value.
+  const [plotWidth, setPlotWidth] = useState(0);
+  const onPlotLayout = (e: LayoutChangeEvent) => setPlotWidth(e.nativeEvent.layout.width);
 
   const values = hours.map((h) => h.value).filter((v): v is number => v !== null);
   const hasData = values.length > 0;
@@ -42,7 +48,6 @@ export function HourlyBarChart({ hours, date }: { hours: TodayHour[]; date: stri
   const maxValue = hasData ? Math.max(...values) : 1;
   const range = maxValue - minValue || 1;
 
-  const plotWidth = Math.max(width - HORIZONTAL_PADDING, 200);
   const slotWidth = plotWidth / 24;
   const barWidth = Math.max(slotWidth * 0.55, 3);
 
@@ -53,7 +58,7 @@ export function HourlyBarChart({ hours, date }: { hours: TodayHour[]; date: stri
     <View style={[styles.container, { backgroundColor: c.surface }]}>
       <Text style={[styles.date, { color: c.textPrimary }]}>{date}</Text>
 
-      <View style={[styles.plot, { height: CHART_HEIGHT }]}>
+      <View style={[styles.plot, { height: CHART_HEIGHT }]} onLayout={onPlotLayout}>
         {hours.map((h, i) => {
           const barHeight =
             h.value === null ? 2 : Math.max(((h.value - minValue) / range) * (CHART_HEIGHT - 24) + 4, 4);
